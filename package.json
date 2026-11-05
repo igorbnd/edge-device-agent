@@ -1,0 +1,35 @@
+{
+  "name": "edge-device-agent",
+  "version": "0.1.0",
+  "description": "Stateful AI agents at the edge for devices that stream telemetry: one Durable Object agent per device on Cloudflare Workers, with an e-bike fleet as the reference use case, plus latency and decision-quality evals",
+  "type": "module",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/igorbnd/edge-device-agent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/igorbnd/edge-device-agent/issues"
+  },
+  "homepage": "https://github.com/igorbnd/edge-device-agent#readme",
+  "keywords": [
+    "cloudflare-workers",
+    "durable-objects",
+    "workers-ai",
+    "edge-ai",
+    "ai-agents",
+    "llm-evals",
+    "iot",
+    "telemetry"
+  ],
+  "engines": {
+    "node": ">=22.5"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "eval:check": "node evals/check.mjs",
+    "eval:run": "node evals/run.mjs",
+    "deploy": "wrangler deploy"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,92 @@
+# Copy to wrangler.toml and fill in your own values: cp wrangler.example.toml wrangler.toml
+name = "e-bike-api"
+main = "src/index.js"
+compatibility_date = "2026-05-14"
+# account_id = "<your account id>"   # or set CLOUDFLARE_ACCOUNT_ID
+
+# Your own domain (optional). Without routes the Worker runs on workers.dev.
+# routes = [{ pattern = "e-bike-api.example.com", custom_domain = true }]
+
+# before deploying need to create KV Namespaces and update the IDs below:
+#   wrangler kv namespace create BIKE_TELEMETRY
+#   wrangler kv namespace create DEVICE_REGISTRY
+
+[[kv_namespaces]]
+binding = "BIKE_TELEMETRY"
+id = "<BIKE_TELEMETRY namespace id>"
+
+[[kv_namespaces]]
+binding = "DEVICE_REGISTRY"
+id = "<DEVICE_REGISTRY namespace id>"
+
+
+# Workers AI binding
+[ai]
+binding = "AI"
+
+# Model used by BikeAgent. Reasoning models need a larger AI_MAX_TOKENS
+# (they spend the budget on thinking first) — see evals/README.md.
+[vars]
+AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast"
+AI_MAX_TOKENS = "200"
+# sync: LLM decides within the request. fast: rules answer now, LLM reviews after.
+DECISION_MODE = "sync"
+# Public hostname: telemetry posts there are rate-limited (other hostnames aren't).
+# Optional: public hostname that gets the telemetry rate limit (unset = every hostname).
+# PUBLIC_HOST = "e-bike-api.example.com"
+# Optional: an old hostname that answers with a "moved" notice pointing at PUBLIC_HOST.
+# MOVED_FROM_HOST = "old-api.example.com"
+# MOVED_UNTIL = "1 January 2027"
+# Optional: a contact line in the /health response.
+# CONTACT_MESSAGE = "Questions? Open an issue on GitHub."
+
+# ---------------------
+# Durable Objects
+# ---------------------
+# BikeAgent — one instance per bike, persistent SQLite, contextualised AI
+ 
+[durable_objects]
+bindings = [
+  { name = "BIKE_AGENT", class_name = "BikeAgent" }
+]
+ 
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["BikeAgent"]
+
+
+# Observability - Logs
+[observability.logs]
+enabled = true
+invocation_logs = true
+# Telemetry posts to the public hostname are limited to 20 a minute per IP.
+# namespace_id is just a number that has to be unique within the account.
+[[ratelimits]]
+name = "TELEMETRY_LIMITER"
+namespace_id = "1001"
+simple = { limit = 20, period = 60 }
+
+# ---------------------
+# Lab environment — latency experiments, isolated from the live demo
+# ---------------------
+# `wrangler deploy --env lab` → e-bike-api-lab.<subdomain>.workers.dev
+# Own Durable Objects (separate script), no KV bindings (nothing written to
+# production KV). Shares the account's Workers AI quota.
+[env.lab]
+name = "e-bike-api-lab"
+workers_dev = true
+routes = []
+
+[env.lab.ai]
+binding = "AI"
+
+[env.lab.vars]
+AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast"
+AI_MAX_TOKENS = "200"
+DECISION_MODE = "fast"
+LAB_MODE = "1"
+
+[env.lab.durable_objects]
+bindings = [
+  { name = "BIKE_AGENT", class_name = "BikeAgent" }
+]

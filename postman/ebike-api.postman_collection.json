@@ -1,0 +1,235 @@
+{
+  "info": {
+    "_postman_id": "373c1817-720f-4c2d-8d8f-0eb31bb5a406",
+    "name": "E-bike edge agent API",
+    "description": "Health Check — edge location + AI features listed\n    \n2. Normal telemetry — device auth, storage\n    \n3. Unregistered device — 403 rejection\n    \n4. EPAC violation + Agentic AI — overspeed triggers autonomous REDUCE_POWER\n    \n5. Critical overheat + Agentic AI — motor 92°C triggers HEALTH_CHECK or REBOOT\n    \n6. Fleet overview — multi-bike status with agent action flags\n    \n7. Agent decision log — audit trail\n    \n8. Invalid payload — schema validation",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Health Check (edge location + features + demo devices)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Connection",
+            "value": "close",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": "DEMO: Show edge_location, list of features, avaiable demo devices and examples of API calls for testers to try. Prove that the API is running at the edge and ready to process telemetry with AI capabilities."
+      },
+      "response": []
+    },
+    {
+      "name": "2. Normal Telemetry (EBIKE-001)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"bike_id\": \"EBIKE-001\",\n  \"latitude\": 51.7520,\n  \"longitude\": -0.3441,\n  \"battery_level\": 78,\n  \"motor_temp_celsius\": 42,\n  \"speed_kmh\": 18.5\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/telemetry",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "telemetry"
+          ]
+        },
+        "description": "DEMO: Normal telemetry — no alerts, no AI invoked. Shows device auth + no agent_action in response = AI only runs when needed (cost-efficient)."
+      },
+      "response": []
+    },
+    {
+      "name": "3. Unregistered Device (FAKE-999)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"bike_id\": \"FAKE-999\",\n  \"latitude\": 52.5200,\n  \"longitude\": 13.4050,\n  \"battery_level\": 50,\n  \"speed_kmh\": 15\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/telemetry",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "telemetry"
+          ]
+        },
+        "description": "DEMO: 403 rejection. In production, mTLS rejects at network level."
+      },
+      "response": []
+    },
+    {
+      "name": "4. EPAC Violation + Agentic AI (EBIKE-002, Paris)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"bike_id\": \"EBIKE-002\",\n  \"latitude\": 48.8566,\n  \"longitude\": 2.3522,\n  \"battery_level\": 8,\n  \"motor_temp_celsius\": 88,\n  \"speed_kmh\": 32\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/telemetry",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "telemetry"
+          ]
+        },
+        "description": "DEMO ASSUMPTION: Bike in Paris — critical battery (8%), motor overheating (88°C), exceeding EU EPAC limit (32 km/h). Three alerts trigger AI agent. Agent autonomously decides action and sends command back to bike. Show:\n- agent_action.command_to_bike\n- agent_action.reasoning (AI-generated)\n- agent_action.autonomous = true\n- agent_action.model = llama-3.1\n- agent_action.decided_at_edge = CDG"
+      },
+      "response": []
+    },
+    {
+      "name": "5. Critical Overheat + Agentic AI (EBIKE-003)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"bike_id\": \"EBIKE-003\",\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333,\n  \"battery_level\": 45,\n  \"motor_temp_celsius\": 97,\n  \"speed_kmh\": 12\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/telemetry",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "telemetry"
+          ]
+        },
+        "description": "DEMO: Bike in São Paulo — critical motor overheat (97°C) but normal speed and moderate battery. Agent should decide HEALTH_CHECK or REBOOT_CONTROLLER. Shows AI making different decisions based on different telemetry patterns. Contrast with test 4."
+      },
+      "response": []
+    },
+    {
+      "name": "6. Fleet Overview",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/fleet",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "fleet"
+          ]
+        },
+        "description": "DEMO: Fleet operator view — all bikes with status, alert flags, and agent action flags. Shows has_agent_action = true for bikes where AI made autonomous decisions."
+      },
+      "response": []
+    },
+    {
+      "name": "7. Agent Decision Log (audit trail)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/agent-log",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "agent-log"
+          ]
+        },
+        "description": "DEMO: Every autonomous agent decision is logged for regulatory audit and compliance. Shows a list of decisions with timestamps, bike_id, command_to_bike, and reasoning. Proves we have an audit trail for all AI actions."
+      },
+      "response": []
+    },
+    {
+      "name": "8. Invalid Payload (validation)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"bike_id\": \"EBIKE-001\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/telemetry",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "telemetry"
+          ]
+        },
+        "description": "DEMO: Schema validation at edge. Missing fields caught before processing."
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8787"
+    }
+  ]
+}

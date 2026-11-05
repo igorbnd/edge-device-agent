@@ -1,0 +1,89 @@
+{
+  "base": "https://e-bike-api-lab.<your-subdomain>.workers.dev",
+  "mode": "sync",
+  "warm": 1,
+  "ai": 0,
+  "hq_colos": {
+    "DE": "LHR"
+  },
+  "rows": [
+    {
+      "device": "DE",
+      "probe": "Falkenstein, DE",
+      "near_agent": "FRA",
+      "near_rules_fb": 71,
+      "near_do_net": 30,
+      "near_ai_fb": null,
+      "hq_agent": "LHR",
+      "hq_rules_fb": 373,
+      "hq_do_net": 301,
+      "hq_ai_fb": null,
+      "edge": "FRA",
+      "rtt": 6,
+      "errors": 0
+    }
+  ],
+  "devices": [
+    {
+      "device": "DE",
+      "probe": {
+        "city": "Falkenstein",
+        "country": "DE",
+        "asn": 24940,
+        "network": "Hetzner Online"
+      },
+      "near": "LAB-NEAR-DE-MVY56IZU",
+      "hq": "LAB-HQ-DE-MVY56IZU",
+      "samples": [
+        {
+          "kind": "cold",
+          "placement": "near",
+          "ok": true,
+          "tcp": 10,
+          "first_byte": 402,
+          "total": 476,
+          "worker_colo": "FRA",
+          "do_colo": "FRA",
+          "do_cold": true,
+          "worker_total_ms": 349,
+          "do_network_ms": 328,
+          "ai_ms": null,
+          "command": null,
+          "error": null
+        },
+        {
+          "kind": "rules",
+          "placement": "near",
+          "ok": true,
+          "tcp": 6,
+          "first_byte": 71,
+          "total": 104,
+          "worker_colo": "FRA",
+          "do_colo": "FRA",
+          "do_cold": false,
+          "worker_total_ms": 30,
+          "do_network_ms": 30,
+          "ai_ms": null,
+          "command": null,
+          "error": null
+        },
+        {
+          "kind": "rules",
+          "placement": "hq",
+          "ok": true,
+          "tcp": 6,
+          "first_byte": 373,
+          "total": 405,
+          "worker_colo": "FRA",
+          "do_colo": "LHR",
+          "do_cold": false,
+          "worker_total_ms": 301,
+          "do_network_ms": 301,
+          "ai_ms": null,
+          "command": null,
+          "error": null
+        }
+      ]
+    }
+  ]
+}
