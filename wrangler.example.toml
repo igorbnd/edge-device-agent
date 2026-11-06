@@ -31,6 +31,8 @@ AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast"
 AI_MAX_TOKENS = "200"
 # sync: LLM decides within the request. fast: rules answer now, LLM reviews after.
 DECISION_MODE = "sync"
+# reasoning_first (default): the model explains, then picks the action. action_first: the original order.
+DECISION_FORMAT = "reasoning_first"
 # Public hostname: telemetry posts there are rate-limited (other hostnames aren't).
 # Optional: public hostname that gets the telemetry rate limit (unset = every hostname).
 # PUBLIC_HOST = "e-bike-api.example.com"

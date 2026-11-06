@@ -26,6 +26,10 @@ import {
 
 const TELEMETRY_COLUMNS = Object.keys(FIELDS);
 
+// Reasoning before action in the model's JSON answer: 8B used the history far
+// better that way (evals/README.md). DECISION_FORMAT = "action_first" restores the original.
+const decisionVariant = env => ({ reasoningFirst: env.DECISION_FORMAT !== 'action_first' });
+
 // ============================================================
 // WORKER (Router)
 // ============================================================
@@ -289,6 +293,7 @@ export class BikeAgent extends DurableObject {
         bikeId: data.bike_id, telemetry: data.telemetry, alerts, history,
         model: this.env.AI_MODEL || DEFAULT_MODEL,
         maxTokens: Number(this.env.AI_MAX_TOKENS) || DEFAULT_MAX_TOKENS,
+        variant: decisionVariant(this.env),
       });
       aiMs = Date.now() - aiStarted;
       agentDecision = decisionMeta.decision;
@@ -415,6 +420,7 @@ export class BikeAgent extends DurableObject {
       bikeId: bike_id, telemetry, alerts, history,
       model: this.env.AI_MODEL || DEFAULT_MODEL,
       maxTokens: Number(this.env.AI_MAX_TOKENS) || DEFAULT_MAX_TOKENS,
+      variant: decisionVariant(this.env),
     });
     const aiMs = Date.now() - aiStarted;
 

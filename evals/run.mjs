@@ -41,7 +41,8 @@ export const MODELS = {
   'gemma4-26b': { id: '@cf/google/gemma-4-26b-a4b-it', maxTokens: 1500, reasoning: true },
 };
 
-// Prompt variants (see decide() in src/agent-core.js). `base` is what the Worker sends.
+// Prompt variants (see decide() in src/agent-core.js). `base` is the original action-first
+// format; `rfirst` is what the Worker sends by default since 2026-11-06 (DECISION_FORMAT).
 //   rfirst    reasoning before action in the JSON schema
 //   findings  history stated as conclusions instead of numbers
 export const VARIANTS = {
