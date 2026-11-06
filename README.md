@@ -221,11 +221,10 @@ Before deploying, set `account_id` in `wrangler.toml` (or `CLOUDFLARE_ACCOUNT_ID
 
 ## Next
 
-- Re-run the reasoning models (gpt-oss, qwen3, gemma) after the fixes, with a pinned, catalogued model ID.
-- An override policy for the LLM review, evaluated like the rest.
-- Run the scenarios through a real Durable Object at the edge, not only through the shared core.
-- A second domain module with its own scenarios, to test how far the pattern carries.
-- Neutral names throughout (`DeviceAgent`, `/device/:id`) with a Durable Object rename migration.
+- **More models.** Re-run the newer reasoning models (gpt-oss, qwen3, gemma) on a pinned model version.
+- **Rules for when the LLM review may change a decision.** Today the review simply replaces the rules answer, and that wasn't reliably better. Test limits such as "only escalate", "only when history shows a pattern" or "a human confirms a lockout", and measure each one.
+- **End-to-end evals.** Send the scenarios to agents actually deployed at the edge, not only to the decision code run locally.
+- **Another domain.** A second use case with its own scenarios, to see how far the pattern carries.
 
 Ideas, harder scenarios and other models are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
