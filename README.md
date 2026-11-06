@@ -84,6 +84,8 @@ Each probe talks to two agents: one created by its own first request (**near**),
 
 The **near** agent is created by the probe's first request. The **HQ** agent is created beforehand by the script itself, from the machine it runs on. For the results above that machine was in London, served from Cloudflare's LHR location.
 
+**A fresh agent for every lab device.** Each lab device gets a unique ID on every run, for example `LAB-NEAR-AU-<run>`. Its first request comes from a Globalping probe in a remote location, so it gets a brand-new Durable Object agent, running at the edge location nearest to that probe.
+
 To run it, you need Node and a deployed lab Worker (`npx wrangler deploy --env lab`). No Globalping account is needed:
 
 ```sh
