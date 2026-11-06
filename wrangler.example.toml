@@ -27,10 +27,12 @@ binding = "AI"
 # Model used by BikeAgent. Reasoning models need a larger AI_MAX_TOKENS
 # (they spend the budget on thinking first) — see evals/README.md.
 [vars]
-AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast"
-AI_MAX_TOKENS = "200"
+AI_MODEL = "@cf/google/gemma-4-26b-a4b-it"
+AI_MAX_TOKENS = "1500"
+# off: skip the hidden thinking pass (Gemma 4: no truncation, ~2 s p50)
+AI_THINKING = "off"
 # sync: LLM decides within the request. fast: rules answer now, LLM reviews after.
-DECISION_MODE = "sync"
+DECISION_MODE = "fast"  # gemma p50 is ~28 s, too slow to decide inside the request
 # reasoning_first (default): the model explains, then picks the action. action_first: the original order.
 DECISION_FORMAT = "reasoning_first"
 # Public hostname: telemetry posts there are rate-limited (other hostnames aren't).
@@ -83,8 +85,10 @@ routes = []
 binding = "AI"
 
 [env.lab.vars]
-AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast"
-AI_MAX_TOKENS = "200"
+AI_MODEL = "@cf/google/gemma-4-26b-a4b-it"
+AI_MAX_TOKENS = "1500"
+# off: skip the hidden thinking pass (Gemma 4: no truncation, ~2 s p50)
+AI_THINKING = "off"
 DECISION_MODE = "fast"
 LAB_MODE = "1"
 

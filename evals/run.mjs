@@ -4,7 +4,7 @@
  *
  *   node evals/run.mjs                                   # all models, both modes, 5 repeats
  *   node evals/run.mjs --models 8b-fast,70b --repeats 1 --scenarios P1-A,P1-B
- *   node evals/run.mjs --models qwen3-30b --max-tokens 200   # force the deployed token budget
+ *   node evals/run.mjs --models gemma4-26b --max-tokens 200  # force the deployed token budget
  *   node evals/run.mjs --summary evals/results/<file>.jsonl   # re-print a past run
  *   node evals/run.mjs --models 8b-fast --variants base,rfirst,findings,rfirst+findings
  *   node evals/run.mjs --models 8b-fast --variants rfirst --temperature 0.7 --repeats 9
@@ -33,23 +33,23 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 // thinking and return empty content, so they get a larger budget here, which
 // means they are NOT drop-in replacements for the deployed config.
 export const MODELS = {
-  '8b-fast': { id: '@cf/meta/llama-3.1-8b-instruct-fast', maxTokens: 200 },   // what the worker calls today (uncatalogued)
-  '8b-fp8': { id: '@cf/meta/llama-3.1-8b-instruct-fp8', maxTokens: 200 },
+  '8b-fast': { id: '@cf/meta/llama-3.1-8b-instruct-fast', maxTokens: 200 },   // deployed until 2026-11-06 (uncatalogued)
   '70b': { id: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', maxTokens: 200 },
   'gpt-oss-20b': { id: '@cf/openai/gpt-oss-20b', maxTokens: 1500, reasoning: true },
-  'qwen3-30b': { id: '@cf/qwen/qwen3-30b-a3b-fp8', maxTokens: 1500, reasoning: true },
-  'gemma4-26b': { id: '@cf/google/gemma-4-26b-a4b-it', maxTokens: 1500, reasoning: true },
+  'gemma4-26b': { id: '@cf/google/gemma-4-26b-a4b-it', maxTokens: 1500, reasoning: true },  // deployed since 2026-11-06
 };
 
 // Prompt variants (see decide() in src/agent-core.js). `base` is the original action-first
 // format; `rfirst` is what the Worker sends by default since 2026-11-06 (DECISION_FORMAT).
 //   rfirst    reasoning before action in the JSON schema
 //   findings  history stated as conclusions instead of numbers
+//   nothink   chat_template_kwargs.enable_thinking=false (reasoning models that support it, e.g. gemma4-26b)
 export const VARIANTS = {
   base: {},
   rfirst: { reasoningFirst: true },
   findings: { findings: true },
   'rfirst+findings': { reasoningFirst: true, findings: true },
+  'rfirst+nothink': { reasoningFirst: true, noThinking: true },
 };
 
 // ---------- args ----------

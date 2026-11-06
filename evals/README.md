@@ -7,14 +7,15 @@ Question: **does an LLM with per-bike memory make better decisions than one with
 | Variant | Model | History in prompt |
 |---|---|---|
 | rules | `determineFallbackAction` | — |
-| 8B-fast / none, full | `@cf/meta/llama-3.1-8b-instruct-fast` (what the worker calls today) | withheld / as deployed |
-| 8B / none, full | `@cf/meta/llama-3.1-8b-instruct-fp8` (catalogued 8B) | withheld / as deployed |
+| 8B-fast / none, full | `@cf/meta/llama-3.1-8b-instruct-fast` (deployed until 2026-11-06) | withheld / as deployed |
 | 70B / none, full | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | withheld / as deployed |
-| newer small | e.g. `@cf/openai/gpt-oss-20b`, `@cf/qwen/qwen3-30b-a3b-fp8`, `@cf/google/gemma-4-26b-a4b-it` | withheld / as deployed |
+| newer small | e.g. `@cf/openai/gpt-oss-20b`, `@cf/google/gemma-4-26b-a4b-it` | withheld / as deployed |
 
 Run each cell ≥5 times; temperature 0.2 is not deterministic.
 
-**Model status (checked 2026-10-26):** the deployed worker calls `@cf/meta/llama-3.1-8b-instruct-fast`. That ID still returns LLM answers (last live decision 2026-10-26 01:20 UTC), but **it is no longer listed** in `wrangler ai models`. Which weights serve it now is unknown. Pin a catalogued ID before quoting numbers. Note that v1 also used the 8B model in code; "Llama 3.3 70B" appears only in the architecture diagram.
+**Model status (checked 2026-10-26):** the worker called `@cf/meta/llama-3.1-8b-instruct-fast`. That ID still returns LLM answers (last live decision 2026-10-26 01:20 UTC), but **it is no longer listed** in `wrangler ai models`. Which weights serve it now is unknown. Pin a catalogued ID before quoting numbers.
+
+**Deprecations (announced 2026-11-05, effective 2026-11-20):** `llama-3.1-8b-instruct-fp8` and `qwen3-30b-a3b-fp8` are being retired, so both were removed from `run.mjs`. Their rows in Run 1 stay as history. The 8B-fast ID isn't on the list, but it's the uncatalogued twin of the retired fp8 model, so expect it to go too. Since 2026-11-06 the worker calls `@cf/google/gemma-4-26b-a4b-it` (1500 tokens, fast mode). Note that v1 also used the 8B model in code; "Llama 3.3 70B" appears only in the architecture diagram.
 
 ## Scenario design
 
@@ -39,9 +40,9 @@ node evals/check.mjs --show P1-B  # exact prompts (full vs none) for one scenari
 ```
 
 ```bash
-node evals/run.mjs                                    # full matrix: 6 models × full/none × 5 repeats
+node evals/run.mjs                                    # full matrix: 4 models × full/none × 5 repeats
 node evals/run.mjs --models 8b-fast,70b --repeats 1 --scenarios P1-A,P1-B
-node evals/run.mjs --models qwen3-30b --max-tokens 200   # deployed token budget
+node evals/run.mjs --models gemma4-26b --max-tokens 200  # deployed token budget
 node evals/run.mjs --summary evals/results/<file>.jsonl   # re-print a past run
 ```
 
@@ -188,6 +189,19 @@ What holds:
 - **They use memory differently.** 70B is consistent but narrow: it reacts every time to a failed intervention and a repeat speeder (P2, P5) and never to a trend, a degrading battery or an erratic sensor (P1, P3, P4). 8B rfirst reacts to all five, less consistently.
 - **Reasoning-first hurts 70B on failed interventions** (P5 9/9 → 1/9). Format choices are model-specific, so evaluate them per model.
 - Caveats: 20 synthetic scenarios, 5 pairs, author-assigned labels. The 70B base samples were taken a day apart. The `scen_ci` column is the one to quote.
+
+### Gemma 4 replaces 8B (2026-11-06)
+
+Workers AI retires `llama-3.1-8b-instruct-fp8` on 2026-11-20 (HTTP 410). Gemma 4, `rfirst`, 1500 tokens, n = 1 per scenario. `results/2026-11-06T21-32-02-792Z.jsonl` (thinking on) and `results/2026-11-06T21-38-58-321Z.jsonl` (thinking off).
+
+| Gemma 4 26B, `rfirst` | Score full / none | Unsafe | Pairs | Truncated | p50 / p95 | $ / 1k decisions |
+|---|---|---|---|---|---|---|
+| thinking on (default) | 68% / 60% | 0 | 3/5 | 5/20 | 12.6 s / 32 s | 0.31 |
+| thinking off (`rfirst+nothink`) | 75% / – | 0 | 3/5 | 0/20 | 1.8 s / 14 s | 0.063 |
+
+- **Thinking off is the deployed setting** (`AI_THINKING = "off"`, which sends `chat_template_kwargs.enable_thinking: false`). Gemma has no effort scale, only on/off. The reasoning-first schema already makes it reason in its visible answer, so the hidden pass mostly burned tokens: a quarter of calls hit the cap and fell back to rules.
+- **Score is a tie at n = 1.** 6 scenarios changed, in both directions. One of the "thinking on" points (P3-B) came from the rules fallback after truncation. Pairs stayed at 3/5, the same as 8B `rfirst`.
+- **p50 dropped ~7×, cost ~5×.** p95 is still 14 s, so the worker stays in `fast` mode.
 
 ## Latency: where does the time go? (2026-11-01)
 

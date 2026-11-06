@@ -28,7 +28,9 @@ const TELEMETRY_COLUMNS = Object.keys(FIELDS);
 
 // Reasoning before action in the model's JSON answer: 8B used the history far
 // better that way (evals/README.md). DECISION_FORMAT = "action_first" restores the original.
-const decisionVariant = env => ({ reasoningFirst: env.DECISION_FORMAT !== 'action_first' });
+// AI_THINKING = "off" skips a reasoning model's hidden thinking pass. For Gemma 4 that removed
+// truncation and cut p50 from ~13 s to ~2 s with no loss in score (evals/README.md).
+const decisionVariant = env => ({ reasoningFirst: env.DECISION_FORMAT !== 'action_first', noThinking: env.AI_THINKING === 'off' });
 
 // ============================================================
 // WORKER (Router)

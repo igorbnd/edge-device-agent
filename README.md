@@ -127,9 +127,10 @@ But when the review simply replaced the rules decision, 8B made it worse more of
 | Rules, current reading only | 44% | 0% | – | 0 |
 | Rules with the same history summary (hand-written) | 74% | 100% | – | 0 |
 | Llama 3.1 8B, action before reasoning (deployed until 2026-11-06) | 40% | 8% | 0.56 s | 3.9 |
-| Llama 3.1 8B, reasoning before action (deployed now) | 56% | 60% | 0.70 s | 4.6 |
+| Llama 3.1 8B, reasoning before action (deployed 2026-11-06, replaced the same day by Gemma 4, see below) | 56% | 60% | 0.70 s | 4.6 |
 | Llama 3.3 70B, action before reasoning | 50% | 40% | 2.47 s | 27.0 |
 
+- **Model switched to Gemma 4 26B on 2026-11-06.** Workers AI retires the catalogued Llama 3.1 8B on 2026-11-20, and the uncatalogued `-fast` ID is likely to go with it. Gemma is too slow to decide inside a request (p50 ~28 s), so the worker now runs in `fast` mode: rules answer immediately and Gemma reviews in the background. The numbers in this table predate the switch.
 - **Field order in the output schema decided whether 8B used memory.** Pairs told apart went from 8% to 60%, with non-overlapping 95% confidence intervals, across all five pairs. The same change made 70B worse, so format choices need evaluating per model. The deployed agent now uses the reasoning-first order (`DECISION_FORMAT` in `wrangler.toml`).
 - **Hand-written rules with the same history beat every model.** They were written with knowledge of the scenarios, so read 74% as an upper bound. It is still the bar an LLM has to clear.
 - **Temperature 0 isn't deterministic on Workers AI.** 5 of 20 scenarios gave different answers across three identical calls. The agent logs every decision rather than relying on replaying the model.

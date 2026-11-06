@@ -19,8 +19,10 @@ import {
 
 export * from './domains/ebike.js';
 
-export const DEFAULT_MODEL = '@cf/meta/llama-3.1-8b-instruct-fast';
-export const DEFAULT_MAX_TOKENS = 200;
+// Gemma 4 is a reasoning model: with thinking on it spends the budget thinking before it answers,
+// so 200 tokens returns empty content. The worker sends AI_THINKING=off and runs in fast mode (evals/README.md).
+export const DEFAULT_MODEL = '@cf/google/gemma-4-26b-a4b-it';
+export const DEFAULT_MAX_TOKENS = 1500;
 
 const RISK_LEVELS = ['low', 'medium', 'high', 'critical'];
 
@@ -242,7 +244,7 @@ export function rulesDecision(telemetry, alerts) {
  * @param deviceId the device's id (`bikeId` is accepted as an alias)
  * @param ai      anything with run(model, input) → Workers AI result (the AI binding, or a REST adapter)
  * @param history result of getHistoricalContext, or null to withhold history
- * @param variant eval-only prompt variants: { reasoningFirst, findings }; the Worker uses the defaults
+ * @param variant eval-only prompt variants: { reasoningFirst, findings, noThinking }; the Worker uses the defaults
  */
 export async function decide(ai, { deviceId, bikeId, telemetry, alerts, history, model = DEFAULT_MODEL, maxTokens = DEFAULT_MAX_TOKENS, temperature = 0.2, variant = {} }) {
   const fallback = reason => ({
@@ -263,6 +265,8 @@ export async function decide(ai, { deviceId, bikeId, telemetry, alerts, history,
       max_tokens: maxTokens,
       temperature,
       response_format: { type: 'json_schema', json_schema: variant.reasoningFirst ? DECISION_SCHEMA_REASONING_FIRST : DECISION_SCHEMA },
+      // Gemma 4 / GLM-style chat templates: skip the hidden thinking pass and answer directly
+      ...(variant.noThinking && { chat_template_kwargs: { enable_thinking: false } }),
     });
   } catch (err) {
     return { decision: applyPolicy(fallback('AI inference unavailable'), telemetry, alerts), error: String(err?.message ?? err), model };
