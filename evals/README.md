@@ -192,7 +192,7 @@ What holds:
 
 ### Gemma 4 replaces 8B (2026-11-06)
 
-Workers AI retires `llama-3.1-8b-instruct-fp8` on 2026-11-20 (HTTP 410). Gemma 4, `rfirst`, 1500 tokens, n = 1 per scenario. `results/2026-11-06T21-32-02-792Z.jsonl` (thinking on) and `results/2026-11-06T21-38-58-321Z.jsonl` (thinking off).
+Workers AI retires `llama-3.1-8b-instruct-fp8` on 2026-11-20 (HTTP 410). Gemma 4, `rfirst`, 1500 tokens. First table: n = 1 per scenario. `results/2026-11-06T21-32-02-792Z.jsonl` (thinking on) and `results/2026-11-06T21-38-58-321Z.jsonl` (thinking off).
 
 | Gemma 4 26B, `rfirst` | Score full / none | Unsafe | Pairs | Truncated | p50 / p95 | $ / 1k decisions |
 |---|---|---|---|---|---|---|
@@ -202,6 +202,26 @@ Workers AI retires `llama-3.1-8b-instruct-fp8` on 2026-11-20 (HTTP 410). Gemma 4
 - **Thinking off is the deployed setting** (`AI_THINKING = "off"`, which sends `chat_template_kwargs.enable_thinking: false`). Gemma has no effort scale, only on/off. The reasoning-first schema already makes it reason in its visible answer, so the hidden pass mostly burned tokens: a quarter of calls hit the cap and fell back to rules.
 - **Score is a tie at n = 1.** 6 scenarios changed, in both directions. One of the "thinking on" points (P3-B) came from the rules fallback after truncation. Pairs stayed at 3/5, the same as 8B `rfirst`.
 - **p50 dropped ~7×, cost ~5×.** p95 is still 14 s, so the worker stays in `fast` mode.
+
+**Pooled, 9 samples per scenario** (adds `results/2026-11-06T22-31-32-021Z.jsonl`, 160 calls, ~900 neurons, 0 errors, 0 truncated). Same method and files as the schema table above, plus the two Gemma files:
+
+| Cell | Samples | Score (17) | 95% CI, sampling | 95% CI, + scenario choice | Pairs told apart | 95% CI | p50 | neurons / call |
+|---|---|---|---|---|---|---|---|---|
+| **Gemma 4 · rfirst+nothink** (deployed) | 9 | **68%** | 66–71% | 51–84% | 20/45 (44%) | 31–59% | 2.0 s | 5.6 |
+| 8B · rfirst (deployed until 2026-11-06) | 9 | 56% | 51–60% | 43–69% | 27/45 (60%) | 45–73% | 0.70 s | 4.6 |
+| 70B · base | 9 | 50% | 48–51% | 32–68% | 18/45 (40%) | 27–55% | 2.47 s | 27.0 |
+
+| Cell | P1 | P2 | P3 | P4 | P5 |
+|---|---|---|---|---|---|
+| Gemma 4 · rfirst+nothink | 0/9 | 9/9 | 1/9 | 2/9 | 8/9 |
+| 8B · rfirst | 2/9 | 6/9 | 6/9 | 8/9 | 5/9 |
+
+Paired bootstrap over scenarios (2,000 rounds): Gemma − 8B rfirst **+13 points, CI −10 to +34**. Gemma − 70B base **+19 points, CI +2 to +37**.
+
+- **Gemma beats 70B; against 8B it's a likely gain, not a proven one.** The CI against 8B still crosses zero.
+- **The gain is in reasoning without history, not in memory.** Gemma's biggest wins are S4 (borderline speed, 1.00 vs 0.11), S5 (impossible speed, 0.94 vs 0.06) and D1 (irrelevant history, 1.00 vs 0.33).
+- **Gemma uses memory like 70B, not like 8B rfirst.** It reliably reacts to discrete events (P2 repeat speeder 9/9, P5 failed intervention 8/9) and almost never to trends (P1 0/9, P3 degrading battery 1/9, P4 erratic sensor 2/9). Pairs told apart fell from 60% to 44% (CIs overlap). The talk claim "the small model uses memory" belongs to 8B; with Gemma, say "memory helps with events, not trends".
+- 0 unsafe in 180 calls. 7 policy overrides, the same mechanism as before.
 
 ## Latency: where does the time go? (2026-11-01)
 
