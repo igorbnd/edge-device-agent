@@ -74,6 +74,26 @@ Each probe talks to two agents: one created by its own first request (**near**),
 - On the LLM path, placement mostly disappears in inference time and variance. That's another reason to keep the LLM off the critical path.
 - Singapore results were bimodal and are excluded.
 
+#### How the placement study works (Globalping)
+
+[Globalping](https://globalping.io) is a free, hosted network of probes: real machines run by volunteers and sponsors around the world. There is nothing to install. [`evals/globalping.mjs`](evals/globalping.mjs) is a plain Node script that drives the probes through Globalping's public API (`api.globalping.io`) using Node's built-in `fetch`:
+
+1. For each device location (GB, DE, New York, California, BR, SG, AU by default), it creates an HTTP measurement that asks a probe in that location to call the lab Worker's `GET /lab/probe`. Globalping probes can only send GET, so `/lab/probe` builds a synthetic reading and runs it through the real telemetry path.
+2. It polls the measurement until the probe reports its HTTP timings (DNS, TCP, TLS, first byte, total). The Worker adds its own timings: where the Worker and the agent ran, the Worker → agent round trip, and the AI call.
+3. Later requests reuse the same probe, so each simulated device stays in one place.
+
+The **near** agent is created by the probe's first request. The **HQ** agent is created beforehand by the script itself, from the machine it runs on. For the results above that machine was in London, served from Cloudflare's LHR location.
+
+To run it, you need Node and a deployed lab Worker (`npx wrangler deploy --env lab`). No Globalping account is needed:
+
+```sh
+node evals/globalping.mjs --base https://e-bike-api-lab.<your-subdomain>.workers.dev \
+  [--devices GB,AU] [--warm 5] [--ai 3] [--mode sync|fast]
+node evals/globalping.mjs --summary evals/results/globalping-<run>.json   # re-print a past run
+```
+
+Each run uses `devices × (1 + 2·warm + 2·ai)` Globalping tests (the free tier allows 250 an hour without a token) and `devices × 2·ai` Workers AI calls. The full method and raw numbers are in [`evals/README.md`](evals/README.md#where-was-your-agent-born-real-devices-near-vs-hq-agents-2026-11-01).
+
 ### Where the time goes (lab worker, measured from London)
 
 | Agent region | Worker → agent | Rules path, total | AI call | AI path, total |
@@ -173,6 +193,7 @@ npm run eval:run -- --models 8b-fast,70b --repeats 3
 node evals/compare.mjs evals/results/<run>.jsonl ...
 npx wrangler deploy --env lab                       # isolated copy on workers.dev for latency runs
 node evals/latency.mjs --base https://e-bike-api-lab.<your-subdomain>.workers.dev
+node evals/globalping.mjs --base https://e-bike-api-lab.<your-subdomain>.workers.dev  # real probes as devices
 ```
 
 Before deploying, set `account_id` in `wrangler.toml` (or `CLOUDFLARE_ACCOUNT_ID`), create your own KV namespaces (`npx wrangler kv namespace create BIKE_TELEMETRY`, and the same for `DEVICE_REGISTRY`) and put their IDs in. Add a `routes` block only if you want your own domain; otherwise the Worker runs on workers.dev.

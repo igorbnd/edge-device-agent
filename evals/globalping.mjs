@@ -33,11 +33,12 @@ const arg = (name, dflt) => {
 
 // Point this at your own deployment (a workers.dev lab copy, or `wrangler dev`), not the public demo.
 const BASE = arg('base', process.env.EBIKE_API_BASE);
-if (!BASE) {
+// --summary only re-prints a saved run, so it needs no deployment.
+if (!BASE && !process.argv.includes('--summary')) {
   console.error('Set --base <url> or EBIKE_API_BASE, e.g. https://e-bike-api-lab.<you>.workers.dev');
   process.exit(1);
 }
-const HOST = new URL(BASE).host;
+const HOST = BASE ? new URL(BASE).host : null;
 const WARM = Number(arg('warm', 5));
 const AI = Number(arg('ai', 3));
 const MODE = arg('mode', 'sync');
