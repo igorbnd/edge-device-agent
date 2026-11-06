@@ -99,7 +99,7 @@ What it says:
 
 ### 8B ablation: why the small model ignored memory (2026-11-01)
 
-`results/2026-11-01T19-49-51-528Z.jsonl` (with history) and `…19-50-30-526Z.jsonl` (without). 8B-fast, 3 repeats, ~1,250 neurons. Variants (`--variants`, `decide(…, { variant })`; the Worker still sends `base`):
+`results/2026-11-01T19-49-51-528Z.jsonl` (with history) and `…19-50-30-526Z.jsonl` (without). 8B-fast, 3 repeats, ~1,250 neurons. Variants (`--variants`, `decide(…, { variant })`. At the time the Worker sent `base`; since 2026-11-06 it sends `rfirst`, see `DECISION_FORMAT`):
 
 - `rfirst`: `reasoning` comes before `action` in the JSON schema. With constrained decoding the model writes fields in schema order, so `base` makes it commit to an action before it has written a single token of reasoning.
 - `findings`: the history is stated as conclusions ("RISING, a pattern", "a ONE-OFF so far", "motor temperature DID NOT DROP after the previous REDUCE_POWER"), not numbers to compare (`renderHistoryFindings`).
